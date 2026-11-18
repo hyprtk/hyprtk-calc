@@ -1,8 +1,10 @@
 # hyprtk-calc — plan
 
-Status: **v0.1.0 scaffolded 2026-11-18**, not published, not wired into
-`hyprtk-merged`. The app runs (GUI + CLI), the gate is green, and the release
-steps below are the remaining work.
+Status: **v0.1.0 published 2026-11-18** — repo `hyprtk/hyprtk-calc` on `main`,
+tag `v0.1.0`, installed locally (`~/.local/share/hyprtk-calc`) and wired into
+`hyprtk-merged` (installer step, `Super + N` / `XF86Calculator`, window rule,
+docs, ISO). What is left is the production publish (`push-all`) and two
+optional follow-ups, both listed below.
 
 ## Decisions (and why)
 
@@ -96,64 +98,69 @@ in the UI, an input-base toggle, plotting, complex numbers.
 
 ## Suite integration — the release order
 
-Nothing here is done yet. `hyprtk-merged` is a source tree, not a destination:
-do these in order, and only when a release is wanted.
+Steps 1–7 are **done** (2026-11-18); step 8 is the publish, which needs an
+explicit go. `hyprtk-merged` is a source tree, not a destination.
 
-1. **Repo + first tag.** `git init` in `~/Projects/AI-Projects/hyprtk-calc`,
-   push `hyprtk/hyprtk-calc` on `main`, tag `v0.1.0`.
-2. **Vendor into merged.** Copy (excluding `.git`, `spike/`, `venv/`,
-   `__pycache__`) to `hyprtk-merged/installer/hyprtk-calc/`.
-3. **`1-install.sh`** — add the install step after `hyprtk-term`:
+- [x] **1. Repo + first tag.** `git init`, push `hyprtk/hyprtk-calc` on `main`,
+      tag `v0.1.0`, topics set.
+- [x] **2. Vendor into merged.** `hyprtk-merged/installer/hyprtk-calc/`
+      (payload only: no tests, scripts, PLAN or RESEARCH).
+- [x] **3. `1-install.sh` step** after hyprtk-term.
+- [x] **4. Keybinding** `Super + N` and `XF86Calculator`.
+- [x] **5. Window rule** float, centered, 480x740.
+- [x] **6. Docs in merged** (`README.md`, `cheatsheet.md`, suite `CHANGELOG`).
+- [x] **7. ISO**: system install, first-run fallback, `~/.local/bin` link.
+- [ ] **8. `push-all`**: gate (T1 matrix, T2 dry-run, audit at zero TODO), suite
+      `CHANGELOG` + tag, merged → dotfiles + live, then reinstall the
+      calculator from the live tree.
 
-   ```sh
-   _spin "Installing hyprtk-calc..." "bash $SCRIPT_DIR/installer/hyprtk-calc/install.sh" "$LOG_FILE"
-   _ok "hyprtk-calc installed (hyprtk-calc; GUI + shell calculator)"
-   ```
+Optional, not done:
 
-   Note: `install.sh` may call `pip` only on the PySide6-missing fallback, so it
-   is safe under `_spin`; no `sudo` anywhere in it.
-4. **Keybinding** — `hypr/keybindings.lua`:
+- **Bar quick link / launcher item.** A `calc` entry in
+  `hyprtk-bar-qt/config.json` (quicklinks and the arc launcher). It only reaches
+  fresh installs — the bar seeds `~/.config` once — so it needs a bar version
+  bump and a re-vendor to be worth doing, and `Super + N` already covers the
+  daily case.
+- **Keypad memory keys** (v0.2), units (v0.3).
 
-   ```lua
-   hl.bind("XF86Calculator", hl.dsp.exec_cmd("sh -c 'p=$HOME/.local/bin/hyprtk-calc; [ -x \"$p\" ] && exec \"$p\""))
-   hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("sh -c 'p=$HOME/.local/bin/hyprtk-calc; [ -x \"$p\" ] && exec \"$p\""))
-   ```
+### The exact edits, for a future port
 
-   `Super+N` is free; `Super+C` is hyprpicker, so it is not an option.
-5. **Window rule** — `hypr/windowrules.lua`, or the app is tiled full-screen
-   (verified on the live session: Hyprland ignores the window's own 460x700 and
-   tiles it 1927x1046):
+`hyprtk-merged/1-install.sh`, after the hyprtk-term block:
 
-   ```lua
-   hl.window_rule({
-       name = "windowrule-hyprtk-calc",
-       match = { class = "hyprtk-calc" },
-       float = true,
-       center = true,
-       size = "480 740",
-   })
-   ```
+```sh
+_step "Installing hyprtk-calc"
+_spin "Installing hyprtk-calc..." "bash $SCRIPT_DIR/installer/hyprtk-calc/install.sh" "$LOG_FILE"
+_ok "hyprtk-calc installed (hyprtk-calc; GUI + shell calculator)"
+```
 
-   The class is the desktop id (`setDesktopFileName`), which the live run
-   confirmed: `hyprctl clients` reports `hyprtk-calc`, not `python3`. Until this
-   rule exists the window tiles and its size is clamped to 1200x1400 when saved,
-   so a tiled first run cannot become the persisted default.
+`hypr/keybindings.lua` — `Super+N` is free, `Super+C` is hyprpicker:
 
-6. **Bar quick link + launcher item** — `installer/hyprtk-bar-qt/config.json`:
-   a `calc` quicklink (`id: "calc"`, glyph `\uf1ec`, command `hyprtk-calc`) and a
-   launcher item next to Terminal. Bar-qt is a shared repo, so the same change
-   is made in `hyprtk-bar-qt/config.json` and re-vendored with
-   `git archive HEAD`, not rsync.
-7. **Docs** — `cheatsheet.md` (shortcut line), `README.md` (apps table, the
-   "Terminal"-style feature row, keybinding table, apps list at the top,
-   project table).
-8. **ISO** — `installer/hyprtk-iso-creator/airootfs/root/customize_airootfs.sh`
-   (system install beside the other apps), `airootfs/usr/local/bin/hyprtk-first-run`
-   (the `SYS_BIN` check and the per-user fallback loop), `packages.hyprtk` only
-   if a new dependency appears (none expected: PySide6 is already baked).
-9. **`push-all`** — gate (T1 matrix, T2 dry-run, audit), suite `CHANGELOG` +
-   tag, merged → dotfiles + live, then reinstall the bar (which does not carry
-   the calculator) and the calculator itself.
+```lua
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("sh -c 'p=$HOME/.local/bin/hyprtk-calc; [ -x \"$p\" ] && exec \"$p\"'"))
+hl.bind("XF86Calculator", hl.dsp.exec_cmd("sh -c 'p=$HOME/.local/bin/hyprtk-calc; [ -x \"$p\" ] && exec \"$p\"'"))
+```
+
+`hypr/windowrules.lua` — without it the window tiles across the work area
+(verified: Hyprland ignores the 460x700 it asks for):
+
+```lua
+hl.window_rule({
+    name = "windowrule-hyprtk-calc",
+    match = { class = "hyprtk-calc" },
+    float = true,
+    center = true,
+    size = "480 740",
+})
+```
+
+The class is the desktop id (`setDesktopFileName`); a live run reports
+`hyprtk-calc`, not `python3`. Saved sizes are clamped to 1200x1400 so a tiled
+first run cannot become the persisted default.
+
+The ISO touches two files: `customize_airootfs.sh` (a `--system` install beside
+the other apps) and `hyprtk-first-run` (a `SYS_BIN` check, a per-user fallback
+install and `hyprtk-calc` in the `~/.local/bin` link loop). `packages.hyprtk`
+needs no change: PySide6 is already baked in.
 
 ## Gate
 
