@@ -73,11 +73,12 @@ in the UI, an input-base toggle, plotting, complex numbers.
 
 ## v0.2 — memory and variables in the UI
 
-- [ ] `MC / MR / M+ / M− / MS` row above the keypad (the Bridge already has
+- [x] `MC / MR / M+ / M− / MS` row above the keypad (the Bridge already has
       `memory()`; the keys and a state badge are missing)
-- [ ] `ans` shown as a clickable token, `x` variables stored in settings
-- [ ] Expression editing: select-all, cut, undo in the entry field
-- [ ] Copy-all-as-text (`Ctrl+Shift+C`) and paste-into-expression
+- [x] `ans` shown as a clickable token — 0.1.2
+- [ ] `x` variables stored in settings (needs an environment in the parser)
+- [x] Expression editing: select-all, cut, undo in the entry field — 0.1.2
+- [x] Copy-all-as-text (`Ctrl+Shift+C`); paste is the field's native Ctrl+V — 0.1.2
 - [ ] `Shift+Enter` to insert a newline-free continuation? (decide: probably no)
 
 ## v0.3 — units and a manual currency table
